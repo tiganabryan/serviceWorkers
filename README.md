@@ -1,2 +1,2 @@
--   site with offline functionality
--   tests for blumi ai's progressive web app
+-   site with offline functionality (complete)
+-   tests for blumi ai's progressive web app (ongoing)
