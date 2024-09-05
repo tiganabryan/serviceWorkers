@@ -5,7 +5,7 @@ self.addEventListener("install", event => {
 	event.waitUntil(
 		/* event.waitUntil is useful when you want to wait for a 
         promise to resolve before stopping the install. */
-		caches.open("version1").then(
+		caches.open("version2").then(
 			cache => {
 				return cache.addAll([
 					"./index.html",
@@ -23,7 +23,39 @@ self.addEventListener("install", event => {
 })
 
 self.addEventListener("activate", event => {
-	console.log("service worker activated:", event)
+	console.log("now activating service worker")
+	const current_cache = "version2"
+	event.waitUntil(
+		caches.keys().then(cacheKeys => {
+			/* caches lets you access the cache in the browser.
+			.keys() returns a promise that resolves to an array 
+			containing strings corresponding to all of the named 
+			Cache objects tracked by the CacheStorage object in 
+			the order they were created */
+			return Promise.all(
+				// Promise.all() resolves to an array of all pending promises as one promise together.
+				cacheKeys.map(cacheKey => {
+					if (cacheKey !== current_cache) {
+						console.log("deleting cache: ", cacheKey)
+						return caches
+							.delete(cacheKey)
+							.then(response =>
+								console.log("was cache deleted", response)
+							)
+						// .then(
+						// 	response => {
+						// 		console.log(response)
+						// 		return response
+						// 	},
+						// 	err => {
+						// 		console.log("error deleting cache:", err)
+						// 	}
+						// )
+					}
+				})
+			)
+		})
+	)
 })
 
 const returnOfflineVersion = event => {
@@ -36,7 +68,7 @@ const pullFromCache = event => {
 			response ||
 			fetch(event.request).then(response => {
 				console.log("fetched from network instead of cache")
-				return caches.open("version1").then(cache => {
+				return caches.open("version2").then(cache => {
 					cache.put(event.request, response.clone())
 					/* response is being consumed (read) here, 
                             and will be deleted from memory unless
